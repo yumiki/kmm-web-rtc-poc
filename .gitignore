@@ -10,5 +10,5 @@ local.properties
 xcuserdata
 
 #Cocopods
-appiOS/Pods/
-appiOS/Podfile.lock
+iosApp/Pods/
+iosApp/Podfile.lock
