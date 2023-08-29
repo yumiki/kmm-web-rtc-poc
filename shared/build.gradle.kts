@@ -21,9 +21,7 @@ kotlin {
         ios.deploymentTarget = "14.1"
         podfile = project.file("../iosApp/Podfile")
 
-
-        pod("FirebaseCore")
-        pod("FirebaseFirestore")
+        //pod("FirebaseFirestore")
         pod("WebRTC-SDK") {
             version = "114.5735.02"
             linkOnly = true
@@ -34,6 +32,7 @@ kotlin {
         framework {
             baseName = "shared"
             export(libs.webrtc.kmp)
+            isStatic = true
         }
 
         xcodeConfigurationToNativeBuildType["CUSTOM_DEBUG"] = org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType.DEBUG
@@ -56,11 +55,17 @@ kotlin {
 
                 api(libs.koin.core)
 
+
                 implementation(libs.kermit)
 
                 api(libs.permissions)
                 api(libs.permissions.compose) // permissions api + compose extensions
 
+                api(libs.gitlive.firebase.common)
+                implementation(libs.gitlive.firebase.firestore)
+                implementation(libs.gitlive.firebase.auth)
+
+                implementation(libs.kotlinx.datetime)
             }
         }
         val commonTest by getting {
@@ -68,13 +73,25 @@ kotlin {
                 implementation(kotlin("test"))
             }
         }
+        val androidMain by getting {
+            dependencies {
+                api(libs.koin.android)
+                api(compose.preview)
+                api(compose.uiTooling)
+            }
+        }
     }
 }
 
 android {
     namespace = "fr.yudo.webrtcpoc"
-    compileSdk = 33
+    compileSdk = 34
     defaultConfig {
         minSdk = 28
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }

@@ -1,3 +1,9 @@
+buildscript {
+    dependencies {
+        classpath(libs.google.services)
+    }
+}
+
 plugins {
     //trick: for the same plugin versions in all sub-modules
     id("com.android.application").version("8.1.1").apply(false)

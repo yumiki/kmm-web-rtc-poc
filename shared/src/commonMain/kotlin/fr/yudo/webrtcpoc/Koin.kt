@@ -1,14 +1,21 @@
 package fr.yudo.webrtcpoc
 
-import org.koin.core.Koin
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.initialize
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.dsl.KoinAppDeclaration
 
-fun initKoin(enableNetworkLogs: Boolean = true, appDeclaration: KoinAppDeclaration = {}) =
+
+fun initKoin(appDeclaration: KoinAppDeclaration = {}) =
     startKoin {
         appDeclaration()
-        modules()
+        modules(emptyList())
+    }.apply {
+        if (getPlatform().name == PlatformName.IOS) {
+            Firebase.initialize()
+        }
+        AuthDataService()
     }
 
 // called by iOS etc

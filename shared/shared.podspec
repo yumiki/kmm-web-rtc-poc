@@ -9,8 +9,6 @@ Pod::Spec.new do |spec|
     spec.vendored_frameworks      = 'build/cocoapods/framework/shared.framework'
     spec.libraries                = 'c++'
     spec.ios.deployment_target = '14.1'
-    spec.dependency 'FirebaseCore'
-    spec.dependency 'FirebaseFirestore'
     spec.dependency 'WebRTC-SDK', '114.5735.02'
                 
     spec.pod_target_xcconfig = {

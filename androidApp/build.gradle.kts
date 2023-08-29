@@ -1,23 +1,37 @@
 plugins {
+    kotlin("multiplatform")
     id("com.android.application")
-    kotlin("android")
+    id("org.jetbrains.compose")
+    id("com.google.gms.google-services")
+}
+
+kotlin {
+    androidTarget()
+    sourceSets {
+        val androidMain by getting {
+            dependencies {
+                api(project(":shared"))
+            }
+        }
+    }
 }
 
 android {
     namespace = "fr.yudo.webrtcpoc.android"
-    compileSdk = 33
+    compileSdk = 34
     defaultConfig {
         applicationId = "fr.yudo.webrtcpoc.android"
         minSdk = 28
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
     }
     buildFeatures {
         compose = true
     }
+
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.7"
+        kotlinCompilerExtensionVersion = "1.5.0"
     }
     packaging {
         resources {
@@ -30,20 +44,7 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
-
-dependencies {
-    implementation(project(":shared"))
-    implementation("androidx.compose.ui:ui:1.4.3")
-    implementation("androidx.compose.ui:ui-tooling:1.4.3")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.4.3")
-    implementation("androidx.compose.foundation:foundation:1.4.3")
-    implementation("androidx.compose.material:material:1.4.3")
-    implementation("androidx.activity:activity-compose:1.7.1")
 }
