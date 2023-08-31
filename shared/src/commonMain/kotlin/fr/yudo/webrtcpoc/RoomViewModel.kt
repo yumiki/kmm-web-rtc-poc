@@ -165,7 +165,11 @@ class RoomViewModel: Room, KoinComponent, ViewModel() {
 
     private fun listenTrackState(track: MediaStreamTrack, logPrefix: String) {
         track.state
-            .onEach { logger.w { "$logPrefix track [id = ${track.id}] state changed: $it" } }
+            .onEach {
+                logger.w { "$logPrefix track [id = ${track.id}] state changed: $it" }
+            }.catch {
+                logger.e(it) { "track issue" }
+            }
             .launchIn(scope + roomSessionJob!!)
     }
 

@@ -6,6 +6,7 @@ import com.shepeliev.webrtckmp.IceCandidate
 import com.shepeliev.webrtckmp.SessionDescription
 import com.shepeliev.webrtckmp.SessionDescriptionType
 import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.firebaseSerializer
 import dev.gitlive.firebase.firestore.ChangeType
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -18,6 +19,8 @@ import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.Serializable
 
 class RoomDataSource {
 
@@ -71,7 +74,10 @@ class RoomDataSource {
     suspend fun getAnswer(roomId: String): SessionDescription = roomsRef
         .document(roomId)
         .snapshots
-        .filter { it.exists && it.contains("answer") }
+        .filter {
+            Logger.log(Severity.Error, "Room", message = "getAnswer: ${it.data<String>()}", throwable = null)
+            it.exists && it.contains("answer")
+        }
         .filterNotNull()
         .map {
             val answer = it.get<String>("answer")
@@ -91,17 +97,24 @@ class RoomDataSource {
                 documents
                     .filter { it.type == ChangeType.ADDED }
                     .map { documentChange ->
-                        Logger.log(Severity.Error, "Room", message = "New doc ${documentChange.document.data<String>()}", throwable = null)
-                        IceCandidate(
+                        //Logger.log(Severity.Error, "Room", message = "New doc ${documentChange.document.data<fr.yudo.webrtcpoc.IceCandidate>()}", throwable = null)
+                        //documentChange.document.data<fr.yudo.webrtcpoc.IceCandidate>()
+                        documentChange.document.data(strategy = fr.yudo.webrtcpoc.IceCandidate.serializer()).toIceCandidate()
+                        /*IceCandidate(
                             sdpMid = documentChange.document.data<Map<String, Any>>()["sdpMid"] as String,
                             sdpMLineIndex = (documentChange.document.data<Map<String, Any>>()["sdpMid"] as Long).toInt(),
                             candidate = documentChange.document.data<Map<String, Any>>()["candidate"] as String
-                        )
+                        )*/
                     }
             }.flatMapConcat {
                 it.asFlow()
             }
 
+}
+
+@Serializable
+data class IceCandidate(val sdpMid: String, val sdpMLineIndex: Int, val candidate: String) {
+    fun toIceCandidate(): IceCandidate = IceCandidate(sdpMid, sdpMLineIndex, candidate)
 }
 
 internal const val FIRESTORE_DOCUMENT_TTL_SECONDS = 60 * 60 * 5 // 5 hours
