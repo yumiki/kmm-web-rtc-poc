@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -87,7 +88,7 @@ class RoomViewModel: Room, KoinComponent, ViewModel() {
             _model.update { it.copy(roomId = roomId, isJoining = false) }
 
             logger.d { "Waiting answer" }
-            val answer = roomDataSource.getAnswer(roomId)
+            val answer = roomDataSource.getAnswer(roomId).first()
             logger.d { "Answer received." }
             peerConnection.setRemoteDescription(answer)
         }

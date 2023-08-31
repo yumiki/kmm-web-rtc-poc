@@ -6,7 +6,6 @@ import com.shepeliev.webrtckmp.IceCandidate
 import com.shepeliev.webrtckmp.SessionDescription
 import com.shepeliev.webrtckmp.SessionDescriptionType
 import dev.gitlive.firebase.Firebase
-import dev.gitlive.firebase.firebaseSerializer
 import dev.gitlive.firebase.firestore.ChangeType
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -15,22 +14,40 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapConcat
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.Serializable
+import kotlin.random.Random
 
 class RoomDataSource {
 
     private val firestore by lazy { Firebase.firestore }
     private val roomsRef by lazy { firestore.collection("rooms") }
 
-    fun createRoom(): String {
-        return roomsRef.document.id.also {
-            Logger.log(Severity.Error, "Room", message = "New room $it", throwable = null)
+    private
+    fun generateRoomId(): String {
+        val characters = "abcdefghijklmnopqrstuvwxyz"
+        val random = Random(Clock.System.now().toEpochMilliseconds())
+
+        val code = buildString {
+            repeat(3) {
+                append(characters[random.nextInt(characters.length)])
+            }
+            append("-")
+            repeat(3) {
+                append(characters[random.nextInt(characters.length)])
+            }
         }
+
+        return code
+    }
+
+
+    fun createRoom(): String {
+        val id = generateRoomId()
+        roomsRef.document(id) // TODO check if there is already a existing document
+        return id
     }
 
     suspend fun insertOffer(roomId: String, description: SessionDescription) {
@@ -71,18 +88,22 @@ class RoomDataSource {
         return offerSdp?.let { SessionDescription(SessionDescriptionType.Offer, it) }
     }
 
-    suspend fun getAnswer(roomId: String): SessionDescription = roomsRef
+    fun getAnswer(roomId: String): Flow<SessionDescription> = roomsRef
         .document(roomId)
         .snapshots
         .filter {
-            Logger.log(Severity.Error, "Room", message = "getAnswer: ${it.data<String>()}", throwable = null)
-            it.exists && it.contains("answer")
+            Logger.log(Severity.Error, "Room", message = "getAnswer: ${it.data<Map<String, String>>()}", throwable = null)
+            it.exists
+        }.map {
+            it.data<Map<String, String>>()["answer"]
         }
         .filterNotNull()
-        .map {
-            val answer = it.get<String>("answer")
-            SessionDescription(SessionDescriptionType.Answer, answer)
-        }.last()
+        .map { answer ->
+            SessionDescription(SessionDescriptionType.Answer, answer).also {
+                sessionDescription ->
+                Logger.log(Severity.Error, "Room", message = "getAnswer sdp: $sessionDescription", throwable = null)
+            }
+        }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun observeIceCandidates(roomId: String, peerName: String): Flow<IceCandidate> =
